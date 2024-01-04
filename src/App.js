@@ -1,8 +1,6 @@
 import {Component} from 'react'
 import {v4 as uuidV4} from 'uuid'
-import './App.css'
-
-// These are the lists used in the application. You can move them to any component needed.
+import Tasks from './components/Tasks'
 
 const tagsList = [
   {
@@ -32,127 +30,143 @@ const tagsList = [
 ]
 
 class App extends Component {
-  state = {list: [], searchInput: '', tags: tagsList}
-
-  onChangeInput = event => {
-    this.setState({searchInput: event.target.value})
+  state = {
+    input: '',
+    selectedTag: tagsList[0].optionId,
+    selectedList: [],
+    activate: 'INITIAL',
   }
 
-  onClickSubmit = event => {
-    event.preventDefault()
-    const {searchInput, tags} = this.state
-    const newValue = {
+  onChangeInput = event => {
+    this.setState({input: event.target.value})
+  }
+
+  onChangeSelectedTag = event => {
+    this.setState({selectedTag: event.target.value})
+  }
+
+  onClickingAddButton = () => {
+    const {input, selectedTag} = this.state
+    const newData = {
       id: uuidV4(),
-      name: searchInput,
-      text: tags.optionId,
+      taskInput: input,
+      taskCategory: selectedTag,
     }
-    this.setState(previousState => ({
-      searchInput: '',
-      list: [...previousState.list, newValue],
+    if (input.length !== 0) {
+      this.setState(prevState => ({
+        selectedList: [...prevState.selectedList, newData],
+        input: '',
+        selectedTag: tagsList[0].optionId,
+      }))
+    }
+  }
+
+  onClickingTag = event => {
+    this.setState(prevState => ({
+      activate:
+        prevState.activate === event.target.value
+          ? 'INITIAL'
+          : event.target.value,
     }))
   }
 
-  onChangeSelect = (event)=>{
-    this.setState({event.target.value})
-  }
-
   render() {
-    const {searchInput, tags, list} = this.state
+    const {selectedList, input, selectedTag, activate} = this.state
+    const updatedData =
+      activate === 'INITIAL'
+        ? selectedList
+        : selectedList.filter(items => items.taskCategory === activate)
     return (
       <div
         style={{
-          height: 100,
-          backgroundSize: 'cover',
           display: 'flex',
-          justifyContent: 'center',
+          justifyContent: 'space-around',
+          alignItems: 'flex-start',
+          margin: 10,
         }}
       >
         <div>
-          <h1 style={{color: '#f3aa4e', fontFamily: 'Roboto', fontSize: 20}}>
-            Create a task!
-          </h1>
-          <form onSubmit={this.onClickSubmit}>
-            <label
-              htmlFor="task"
-              style={{color: 'black', fontSize: 17, fontFamily: 'roboto'}}
-            >
-              Task
-            </label>
-            <br />
+          <h1>Create a Task!</h1>
+          <form onSubmit={this.onClickingAddButton}>
+            <label htmlFor="task">Task</label>
             <input
+              type="text"
               id="task"
-              type="search"
-              style={{
-                height: 50,
-                width: 100,
-                borderColor: '#323f4b',
-                paddingTop: 5,
-                paddingBottom: 5,
-              }}
-              value={searchInput}
+              placeholder="Enter the task here"
+              value={input}
               onChange={this.onChangeInput}
             />
-            <br />
-            <label
-              htmlFor="tag"
-              style={{color: 'black', fontSize: 17, fontFamily: 'roboto'}}
-            >
-              Tags
-            </label>
-            <br />
+            <label htmlFor="tags">Tags</label>
             <select
-              id="tag"
-              style={{
-                height: 50,
-                width: 200,
-                borderColor: '#323f4b',
-                paddingTop: 5,
-                paddingBottom: 5,
-                color: 'black',
-              }}
-
-              onChange={this.onChangeSelect}
+              id="tags"
+              onChange={this.onChangeSelectedTag}
+              value={selectedTag}
+              style={{height: 20, width: 80}}
             >
-              {tags.map(eachTag => (
-                <option key={eachTag.id} value={eachTag.id}>
-                  {eachTag.optionId}
-                </option>
+              {tagsList.map(each => (
+                <option value={each.optionId}>{each.displayText}</option>
               ))}
             </select>
-            <br />
-            <button type="submit">Add</button>
+            <button type="submit">Add Task</button>
           </form>
         </div>
-        <div style={{display: 'flex', flexDirection: 'column'}}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-start',
+            alignItems: 'flex-start',
+          }}
+        >
           <div>
             <h1>Tags</h1>
-            <ul>
-              {tags.map(eachButtonTag => (
-                <li key={eachButtonTag.id} style={{listStyleType: 'none'}}>
-                  <button type="button">{eachButtonTag.displayText}</button>
+            <ul
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+              }}
+            >
+              {tagsList.map(eachTags => (
+                <li key={eachTags.optionId}>
+                  <button
+                    type="button"
+                    value={eachTags.optionId}
+                    onClick={this.onClickingTag}
+                  >
+                    {eachTags.displayText}
+                  </button>
                 </li>
               ))}
             </ul>
           </div>
+          <h1>Tasks</h1>
           <div>
-            {list.length > 0 ? (
+            {updatedData.length === 0 ? (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <p
+                  style={{
+                    color: 'green',
+                    fontSize: 27,
+                    fontFamily: 'initial',
+                  }}
+                >
+                  No Tasks Added Yet
+                </p>
+              </div>
+            ) : (
               <ul>
-                {list.map(eachList => (
-                  <li
-                    key={eachList.id}
-                    style={{
-                      listStyleType: 'none',
-                      backgroundColor: 'green',
-                      color: 'darkblue',
-                    }}
-                  >
-                    <p>{eachList.name}</p>
-                    <p>{eachList.text}</p>
-                  </li>
+                {updatedData.map(multi => (
+                  <Tasks key={multi.id} taskDetails={multi} />
                 ))}
               </ul>
-            ) : (
-              'No Task Added Yet'
             )}
           </div>
         </div>
@@ -160,4 +174,5 @@ class App extends Component {
     )
   }
 }
+
 export default App
